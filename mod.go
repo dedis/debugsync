@@ -1,7 +1,8 @@
 // Package debugsync defines the logger.
 //
-// debugsync is using a global logger with some default parameters. It is disabled by
-// default and the level can be increased using a environment variable:
+// debugsync is using a global logger with some default parameters.
+// It is disabled by default and the level can be increased using
+// an environment variable:
 //
 //	LLVL=trace go test ./...
 //	LLVL=info go test ./...
