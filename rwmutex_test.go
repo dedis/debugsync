@@ -53,8 +53,8 @@ func TestParallelReaders(t *testing.T) {
 	doTestParallelReaders(4, 2)
 }
 
-func reader(rwm *RWMutex, num_iterations int, activity *int32, cdone chan bool) {
-	for i := 0; i < num_iterations; i++ {
+func reader(rwm *RWMutex, numIterations int, activity *int32, cdone chan bool) {
+	for i := 0; i < numIterations; i++ {
 		rwm.RLock()
 		n := atomic.AddInt32(activity, 1)
 		if n < 1 || n >= 10000 {
@@ -69,8 +69,8 @@ func reader(rwm *RWMutex, num_iterations int, activity *int32, cdone chan bool) 
 	cdone <- true
 }
 
-func writer(rwm *RWMutex, num_iterations int, activity *int32, cdone chan bool) {
-	for i := 0; i < num_iterations; i++ {
+func writer(rwm *RWMutex, numIterations int, activity *int32, cdone chan bool) {
+	for i := 0; i < numIterations; i++ {
 		rwm.Lock()
 		n := atomic.AddInt32(activity, 10000)
 		if n != 10000 {
@@ -85,20 +85,20 @@ func writer(rwm *RWMutex, num_iterations int, activity *int32, cdone chan bool) 
 	cdone <- true
 }
 
-func HammerRWMutex(gomaxprocs, numReaders, num_iterations int) {
+func HammerRWMutex(gomaxprocs, numReaders, numIterations int) {
 	runtime.GOMAXPROCS(gomaxprocs)
 	// Number of active readers + 10000 * number of active writers.
 	var activity int32
 	var rwm RWMutex
 	cdone := make(chan bool)
-	go writer(&rwm, num_iterations, &activity, cdone)
+	go writer(&rwm, numIterations, &activity, cdone)
 	var i int
 	for i = 0; i < numReaders/2; i++ {
-		go reader(&rwm, num_iterations, &activity, cdone)
+		go reader(&rwm, numIterations, &activity, cdone)
 	}
-	go writer(&rwm, num_iterations, &activity, cdone)
+	go writer(&rwm, numIterations, &activity, cdone)
 	for ; i < numReaders; i++ {
-		go reader(&rwm, num_iterations, &activity, cdone)
+		go reader(&rwm, numIterations, &activity, cdone)
 	}
 	// Wait for the 2 writers and all readers to finish.
 	for i := 0; i < 2+numReaders; i++ {

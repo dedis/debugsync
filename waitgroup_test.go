@@ -86,7 +86,6 @@ func TestWaitGroupRace(t *testing.T) {
 
 func TestWaitGroupAlign(t *testing.T) {
 	type X struct {
-		x  byte
 		wg WaitGroup
 	}
 	var x X
