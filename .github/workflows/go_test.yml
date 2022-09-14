@@ -12,7 +12,8 @@ jobs:
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{matrix.platform}}
     env:
-      LLVL: trace
+      DBGSYNCLOG: trace
+      DBGSYNCON: true
     steps:
     - name: Set up Go ^1.19
       uses: actions/setup-go@v2

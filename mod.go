@@ -4,8 +4,8 @@
 // It is disabled by default and the level can be increased using
 // an environment variable:
 //
-//	LLVL=trace go test ./...
-//	LLVL=info go test ./...
+//	DBGSYNCLOG=trace go test ./...
+//	DBGSYNCLOG=info go test ./...
 package debugsync
 
 import (
@@ -17,11 +17,15 @@ import (
 
 // EnvLogLevel is the name of the environment variable to change the logging
 // level.
-const EnvLogLevel = "LLVL"
+const EnvLogLevel = "DBGSYNCLOG"
+const DebugFlag = "DBGSYNCON"
 
 const defaultLevel = zerolog.NoLevel
 
 func init() {
+	dbg := os.Getenv(DebugFlag)
+	DebugIsOn = dbg == "true"
+
 	lvl := os.Getenv(EnvLogLevel)
 
 	var level zerolog.Level
@@ -40,7 +44,7 @@ func init() {
 	case "":
 		level = defaultLevel
 	default:
-		level = zerolog.TraceLevel
+		level = zerolog.Disabled
 	}
 
 	Logger = Logger.Level(level)
@@ -56,3 +60,6 @@ var logout = zerolog.ConsoleWriter{
 var Logger = zerolog.New(logout).Level(defaultLevel).
 	With().Timestamp().Logger().
 	With().Caller().Logger()
+
+// DebugIsOn allows to turn the debugging tool on
+var DebugIsOn = false
