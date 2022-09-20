@@ -9,8 +9,7 @@ lint:
 
 vet:
 	@echo "⚠️ Warning: the following only works with go >= 1.14" && \
-	go install ./internal/mcheck && \
-	go vet -vettool=`go env GOPATH`/bin/mcheck -commentLen -ifInit ./...
+	go vet ./...
 
 # target to run all the possible checks; it's a good habit to run it before
 # pushing code

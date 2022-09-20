@@ -36,11 +36,15 @@ type RWMutex struct {
 // If the lock is already locked for reading or writing,
 // Lock blocks until the lock is available.
 func (m *RWMutex) Lock() {
-	locking := startLockTimer("RWMutex timed out when acquiring lock", debug.Stack())
-	m.mutex.Lock()
-	close(locking)
+	if DebugIsOn {
+		locking := startLockTimer("RWMutex timed out when acquiring lock", debug.Stack())
+		m.mutex.Lock()
+		close(locking)
 
-	m.unlocking = startLockTimer("RWMutex timed out before releasing lock", debug.Stack())
+		m.unlocking = startLockTimer("RWMutex timed out before releasing lock", debug.Stack())
+	} else {
+		m.mutex.Lock()
+	}
 }
 
 // TryLock tries to lock rw for writing and reports whether it succeeded.
@@ -51,7 +55,7 @@ func (m *RWMutex) Lock() {
 func (m *RWMutex) TryLock() bool {
 	locked := m.mutex.TryLock()
 
-	if locked {
+	if DebugIsOn && locked {
 		m.unlocking = startLockTimer("RWMutex timed out before releasing lock", debug.Stack())
 	}
 
@@ -65,7 +69,10 @@ func (m *RWMutex) TryLock() bool {
 // goroutine. One goroutine may RLock (Lock) a RWMutex and then
 // arrange for another goroutine to RUnlock (Unlock) it.
 func (m *RWMutex) Unlock() {
-	close(m.unlocking)
+	if DebugIsOn && m.unlocking != nil {
+		close(m.unlocking)
+		m.unlocking = nil
+	}
 	m.mutex.Unlock()
 }
 
@@ -88,11 +95,15 @@ func (m *RWMutex) Unlock() {
 // call excludes new readers from acquiring the lock. See the
 // documentation on the RWMutex type.
 func (m *RWMutex) RLock() {
-	locking := startLockTimer("RWMutex timed out when acquiring RLock", debug.Stack())
-	m.mutex.RLock()
-	close(locking)
+	if DebugIsOn {
+		locking := startLockTimer("RWMutex timed out when acquiring RLock", debug.Stack())
+		m.mutex.RLock()
+		close(locking)
 
-	m.startRLockTimer("RMutex timed out before releasing RLock", debug.Stack())
+		m.startRLockTimer("RMutex timed out before releasing RLock", debug.Stack())
+	} else {
+		m.mutex.RLock()
+	}
 }
 
 // TryRLock tries to lock rw for reading and reports whether it succeeded.
@@ -102,7 +113,7 @@ func (m *RWMutex) RLock() {
 // in a particular use of mutexes.
 func (m *RWMutex) TryRLock() bool {
 	locked := m.mutex.TryRLock()
-	if locked {
+	if DebugIsOn && locked {
 		m.startRLockTimer("RMutex timed out before releasing RLock", debug.Stack())
 	}
 	return locked
@@ -113,8 +124,19 @@ func (m *RWMutex) TryRLock() bool {
 // It is a run-time error if rw is not locked for reading
 // on entry to RUnlock.
 func (m *RWMutex) RUnlock() {
-	m.wg.Done()
-	m.mutex.RUnlock()
+	defer m.mutex.RUnlock()
+
+	if DebugIsOn {
+		m.wg.Done()
+		defer func() {
+			err := recover()
+			if err != nil {
+				// when the WaitGroup goes bellow zero,
+				// we need to recover from panic and re-initialize it
+				m.wg = sync.WaitGroup{}
+			}
+		}()
+	}
 }
 
 func (m *RWMutex) startRLockTimer(msg string, stack []byte) {

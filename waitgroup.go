@@ -1,7 +1,6 @@
 package debugsync
 
 import (
-	"fmt"
 	"runtime/debug"
 	"sync"
 )
@@ -34,8 +33,11 @@ func (wg *WaitGroup) Done() {
 
 // Wait blocks until the WaitGroup counter is zero.
 func (wg *WaitGroup) Wait() {
-	msg := fmt.Sprintf("WaitGroup %v timed out", wg.wg)
-	waiting := startLockTimer(msg, debug.Stack())
-	wg.wg.Wait()
-	close(waiting)
+	if DebugIsOn {
+		waiting := startLockTimer("WaitGroup timed out", debug.Stack())
+		wg.wg.Wait()
+		close(waiting)
+	} else {
+		wg.wg.Wait()
+	}
 }

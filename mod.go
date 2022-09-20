@@ -1,14 +1,23 @@
 // Package debugsync defines the logger.
 //
-// debugsync is using a global logger with some default parameters. It is disabled by
-// default and the level can be increased using a environment variable:
+// debugsync is using a global logger with some default parameters.
+// It is disabled by default and the level can be increased using
+// an environment variable:
 //
-//	LLVL=trace go test ./...
-//	LLVL=info go test ./...
+//	 DBGSYNCLOG=trace
+//	 DBGSYNCLOG=info
+//
+// debugsync main feature is disabled by default and thus works seemingly
+// like the original sync package from the standard. To enable the debugging
+// feature, use the following environment variable, e.g:
+//   DBGSYNCON=true
+//
+
 package debugsync
 
 import (
 	"os"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -16,11 +25,17 @@ import (
 
 // EnvLogLevel is the name of the environment variable to change the logging
 // level.
-const EnvLogLevel = "LLVL"
+const EnvLogLevel = "DBGSYNCLOG"
+
+// EnvDebugSwitch is the name of the environment variable to allow debugging.
+const EnvDebugSwitch = "DBGSYNCON"
 
 const defaultLevel = zerolog.NoLevel
 
 func init() {
+	dbg := os.Getenv(EnvDebugSwitch)
+	DebugIsOn = strings.ToLower(dbg) == "true"
+
 	lvl := os.Getenv(EnvLogLevel)
 
 	var level zerolog.Level
@@ -39,7 +54,7 @@ func init() {
 	case "":
 		level = defaultLevel
 	default:
-		level = zerolog.TraceLevel
+		level = zerolog.Disabled
 	}
 
 	Logger = Logger.Level(level)
@@ -55,3 +70,6 @@ var logout = zerolog.ConsoleWriter{
 var Logger = zerolog.New(logout).Level(defaultLevel).
 	With().Timestamp().Logger().
 	With().Caller().Logger()
+
+// DebugIsOn allows to turn the debugging tool on
+var DebugIsOn = false

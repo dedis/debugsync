@@ -25,12 +25,16 @@ type Mutex struct {
 // If the lock is already in use, the calling goroutine
 // blocks until the mutex is available.
 func (m *Mutex) Lock() {
-	Logger.Debug().Msg("Locking")
-	locking := startLockTimer("RWMutex timed out when acquiring lock", debug.Stack())
-	m.mutex.Lock()
-	close(locking)
+	if DebugIsOn {
+		Logger.Debug().Msg("Locking")
+		locking := startLockTimer("RWMutex timed out when acquiring lock", debug.Stack())
+		m.mutex.Lock()
+		close(locking)
 
-	m.unlocking = startLockTimer("RWMutex timed out before releasing lock", debug.Stack())
+		m.unlocking = startLockTimer("RWMutex timed out before releasing lock", debug.Stack())
+	} else {
+		m.mutex.Lock()
+	}
 }
 
 // TryLock tries to lock m and reports whether it succeeded.
@@ -41,7 +45,7 @@ func (m *Mutex) Lock() {
 func (m *Mutex) TryLock() bool {
 	locked := m.mutex.TryLock()
 
-	if locked {
+	if DebugIsOn && locked {
 		m.unlocking = startLockTimer("RWMutex timed out before releasing lock", debug.Stack())
 	}
 
@@ -55,6 +59,9 @@ func (m *Mutex) TryLock() bool {
 // It is allowed for one goroutine to lock a Mutex and then
 // arrange for another goroutine to unlock it.
 func (m *Mutex) Unlock() {
-	close(m.unlocking)
+	if DebugIsOn && m.unlocking != nil {
+		close(m.unlocking)
+		m.unlocking = nil
+	}
 	m.mutex.Unlock()
 }
