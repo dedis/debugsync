@@ -33,7 +33,8 @@ func HammerMutex(m *Mutex, loops int, cdone chan bool) {
 	cdone <- true
 }
 
-func TestMutex(t *testing.T) {
+func mutex(t *testing.T) {
+	DebugIsOn = false
 	if n := runtime.SetMutexProfileFraction(1); n != 0 {
 		t.Logf("got mutexrate %d expected 0", n)
 	}
@@ -58,6 +59,16 @@ func TestMutex(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		<-c
 	}
+}
+
+func TestMutexDebugOff(t *testing.T) {
+	DebugIsOn = false
+	mutex(t)
+}
+
+func TestMutexDebugOn(t *testing.T) {
+	DebugIsOn = true
+	mutex(t)
 }
 
 var misuseTests = []struct {
@@ -147,7 +158,7 @@ func init() {
 	}
 }
 
-func TestMutexMisuse(t *testing.T) {
+func mutexMisuse(t *testing.T) {
 	for _, test := range misuseTests {
 		out, err := exec.Command(os.Args[0], "TESTMISUSE", test.name).CombinedOutput()
 		if err == nil || !strings.Contains(string(out), "unlocked") {
@@ -156,7 +167,17 @@ func TestMutexMisuse(t *testing.T) {
 	}
 }
 
-func TestMutexFairness(t *testing.T) {
+func TestMutexMisuseDebugOff(t *testing.T) {
+	DebugIsOn = false
+	mutexMisuse(t)
+}
+
+func TestMutexMisuseDebugOn(t *testing.T) {
+	DebugIsOn = true
+	mutexMisuse(t)
+}
+
+func mutexFairness(t *testing.T) {
 	var mu Mutex
 	stop := make(chan bool)
 	defer close(stop)
@@ -186,4 +207,14 @@ func TestMutexFairness(t *testing.T) {
 	case <-time.After(10 * time.Second):
 		t.Fatalf("can't acquire Mutex in 10 seconds")
 	}
+}
+
+func TestMutexFairnessDebugOff(t *testing.T) {
+	DebugIsOn = false
+	mutexFairness(t)
+}
+
+func TestMutexFairnessDebugOn(t *testing.T) {
+	DebugIsOn = true
+	mutexFairness(t)
 }

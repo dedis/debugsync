@@ -46,11 +46,21 @@ func doTestParallelReaders(numReaders, gomaxprocs int) {
 	}
 }
 
-func TestParallelReaders(t *testing.T) {
+func parallelReaders(t *testing.T) {
 	defer runtime.GOMAXPROCS(runtime.GOMAXPROCS(-1))
 	doTestParallelReaders(1, 4)
 	doTestParallelReaders(3, 4)
 	doTestParallelReaders(4, 2)
+}
+
+func TestParallelReadersDebugOff(t *testing.T) {
+	DebugIsOn = false
+	parallelReaders(t)
+}
+
+func TestParallelReadersDebugOn(t *testing.T) {
+	DebugIsOn = true
+	parallelReaders(t)
 }
 
 func reader(rwm *RWMutex, numIterations int, activity *int32, cdone chan bool) {
@@ -102,7 +112,7 @@ func HammerRWMutex(gomaxprocs, numReaders, numIterations int) {
 	}
 }
 
-func TestRWMutex(t *testing.T) {
+func rwMutex(t *testing.T) {
 	var m RWMutex
 
 	m.Lock()
@@ -146,4 +156,14 @@ func TestRWMutex(t *testing.T) {
 	HammerRWMutex(10, 3, n)
 	HammerRWMutex(10, 10, n)
 	HammerRWMutex(10, 5, n)
+}
+
+func TestRWMutexDebugOff(t *testing.T) {
+	DebugIsOn = false
+	rwMutex(t)
+}
+
+func TestRWMutexDebugOn(t *testing.T) {
+	DebugIsOn = true
+	rwMutex(t)
 }

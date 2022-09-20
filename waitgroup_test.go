@@ -35,7 +35,9 @@ func testWaitGroup(t *testing.T, wg1 *WaitGroup, wg2 *WaitGroup) {
 	}
 }
 
-func TestWaitGroup(t *testing.T) {
+func TestWaitGroupDebugOff(t *testing.T) {
+	DebugIsOn = false
+
 	wg1 := &WaitGroup{}
 	wg2 := &WaitGroup{}
 
@@ -45,7 +47,19 @@ func TestWaitGroup(t *testing.T) {
 	}
 }
 
-func TestWaitGroupMisuse(t *testing.T) {
+func TestWaitGroupDebugOn(t *testing.T) {
+	DebugIsOn = true
+
+	wg1 := &WaitGroup{}
+	wg2 := &WaitGroup{}
+
+	// Run the same test a few times to ensure barrier is in a proper state.
+	for i := 0; i != 8; i++ {
+		testWaitGroup(t, wg1, wg2)
+	}
+}
+
+func waitGroupMisuse(t *testing.T) {
 	defer func() {
 		err := recover()
 		if err != "sync: negative WaitGroup counter" {
@@ -59,7 +73,17 @@ func TestWaitGroupMisuse(t *testing.T) {
 	t.Fatal("Should panic")
 }
 
-func TestWaitGroupRace(t *testing.T) {
+func TestWaitGroupMisuseDebugOff(t *testing.T) {
+	DebugIsOn = false
+	waitGroupMisuse(t)
+}
+
+func TestWaitGroupMisuseDebugOn(t *testing.T) {
+	DebugIsOn = true
+	waitGroupMisuse(t)
+}
+
+func waitGroupRace(t *testing.T) {
 	// Run this test for about 1ms.
 	for i := 0; i < 1000; i++ {
 		wg := &WaitGroup{}
@@ -84,7 +108,17 @@ func TestWaitGroupRace(t *testing.T) {
 	}
 }
 
-func TestWaitGroupAlign(t *testing.T) {
+func TestWaitGroupRaceDebugOff(t *testing.T) {
+	DebugIsOn = false
+	waitGroupRace(t)
+}
+
+func TestWaitGroupRaceDebugOn(t *testing.T) {
+	DebugIsOn = true
+	waitGroupRace(t)
+}
+
+func waitGroupAlign(t *testing.T) {
 	type X struct {
 		wg WaitGroup
 	}
@@ -94,4 +128,14 @@ func TestWaitGroupAlign(t *testing.T) {
 		x.wg.Done()
 	}(&x)
 	x.wg.Wait()
+}
+
+func TestWaitGroupAlignDebugOff(t *testing.T) {
+	DebugIsOn = false
+	waitGroupAlign(t)
+}
+
+func TestWaitGroupAlignDebugOn(t *testing.T) {
+	DebugIsOn = true
+	waitGroupAlign(t)
 }
