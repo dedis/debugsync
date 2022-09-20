@@ -1,3 +1,5 @@
+// This file is adapted from the GO sync package.
+// It originally contains the following license:
 // Copyright 2011 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
@@ -118,7 +120,7 @@ func TestWaitGroupRaceDebugOn(t *testing.T) {
 	waitGroupRace(t)
 }
 
-func waitGroupAlign(t *testing.T) {
+func waitGroupAlign() {
 	type X struct {
 		wg WaitGroup
 	}
@@ -132,10 +134,10 @@ func waitGroupAlign(t *testing.T) {
 
 func TestWaitGroupAlignDebugOff(t *testing.T) {
 	DebugIsOn = false
-	waitGroupAlign(t)
+	waitGroupAlign()
 }
 
 func TestWaitGroupAlignDebugOn(t *testing.T) {
 	DebugIsOn = true
-	waitGroupAlign(t)
+	waitGroupAlign()
 }

@@ -131,9 +131,8 @@ func (m *RWMutex) RUnlock() {
 		defer func() {
 			err := recover()
 			if err != nil {
-				// when m.wg goes bellow zero,
-				// we need to recover from panic for the unit tests,
-				// re-init the wg
+				// when the WaitGroup goes bellow zero,
+				// we need to recover from panic and re-initialize it
 				m.wg = sync.WaitGroup{}
 			}
 		}()

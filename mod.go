@@ -4,12 +4,20 @@
 // It is disabled by default and the level can be increased using
 // an environment variable:
 //
-//	DBGSYNCLOG=trace go test ./...
-//	DBGSYNCLOG=info go test ./...
+//	 DBGSYNCLOG=trace
+//	 DBGSYNCLOG=info
+//
+// debugsync main feature is disabled by default and thus works seemingly
+// like the original sync package from the standard. To enable the debugging
+// feature, use the following environment variable, e.g:
+//   DBGSYNCON=true
+//
+
 package debugsync
 
 import (
 	"os"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -18,13 +26,15 @@ import (
 // EnvLogLevel is the name of the environment variable to change the logging
 // level.
 const EnvLogLevel = "DBGSYNCLOG"
-const DebugFlag = "DBGSYNCON"
+
+// EnvDebugSwitch is the name of the environment variable to allow debugging.
+const EnvDebugSwitch = "DBGSYNCON"
 
 const defaultLevel = zerolog.NoLevel
 
 func init() {
-	dbg := os.Getenv(DebugFlag)
-	DebugIsOn = dbg == "true"
+	dbg := os.Getenv(EnvDebugSwitch)
+	DebugIsOn = strings.ToLower(dbg) == "true"
 
 	lvl := os.Getenv(EnvLogLevel)
 

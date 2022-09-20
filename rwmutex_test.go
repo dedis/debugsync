@@ -1,3 +1,5 @@
+// This file is adapted from the GO sync package.
+// It originally contains the following license:
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
@@ -12,9 +14,6 @@ import (
 	"sync/atomic"
 	"testing"
 )
-
-// There is a modified copy of this file in runtime/rwmutex_test.go.
-// If you make any changes here, see if you should make them there.
 
 func parallelReader(m *RWMutex, clocked, cunlock, cdone chan bool) {
 	m.RLock()
@@ -46,7 +45,7 @@ func doTestParallelReaders(numReaders, gomaxprocs int) {
 	}
 }
 
-func parallelReaders(t *testing.T) {
+func parallelReaders() {
 	defer runtime.GOMAXPROCS(runtime.GOMAXPROCS(-1))
 	doTestParallelReaders(1, 4)
 	doTestParallelReaders(3, 4)
@@ -55,12 +54,12 @@ func parallelReaders(t *testing.T) {
 
 func TestParallelReadersDebugOff(t *testing.T) {
 	DebugIsOn = false
-	parallelReaders(t)
+	parallelReaders()
 }
 
 func TestParallelReadersDebugOn(t *testing.T) {
 	DebugIsOn = true
-	parallelReaders(t)
+	parallelReaders()
 }
 
 func reader(rwm *RWMutex, numIterations int, activity *int32, cdone chan bool) {
