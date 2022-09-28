@@ -6,7 +6,7 @@
 
 // GOMAXPROCS=10 go test
 
-package debugsync
+package sync
 
 import (
 	"fmt"

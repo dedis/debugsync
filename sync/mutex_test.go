@@ -8,7 +8,7 @@
 
 //lint:file-ignore SA2001 Empty critical section is acceptable in the context of a test
 
-package debugsync
+package sync
 
 import (
 	"fmt"
