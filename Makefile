@@ -3,9 +3,9 @@ generate:
 
 lint:
 	# Coding style static check.
-	@go install honnef.co/go/tools/cmd/staticcheck@latest
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
 	@go mod tidy
-	staticcheck `go list ./...`
+	golangci-lint run
 
 vet:
 	@echo "⚠️ Warning: the following only works with go >= 1.14" && \
