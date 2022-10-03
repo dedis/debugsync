@@ -1,5 +1,11 @@
 package sync
 
-// Once is only defined for compatibility reasons
+import (
+	_sync "sync"
+)
+
+// Once is an object that will perform exactly one action.
+// Once is an object that will perform exactly one action.
 type Once struct {
+	_sync.Once
 }

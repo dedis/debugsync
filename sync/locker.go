@@ -1,7 +1,10 @@
 package sync
 
-// Locker is only defined for compatibility reasons
+import (
+	_sync "sync"
+)
+
+// A Locker represents an object that can be locked and unlocked.
 type Locker interface {
-	Lock()
-	Unlock()
+	_sync.Locker
 }
