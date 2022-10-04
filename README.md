@@ -10,4 +10,4 @@ written in GO.
 ## sync
 Package that helps debugging mutexes and workgroups in a distributed system. Any
 system deadlock will fire off after a defined timeout.
-
+This is a drop-in replacement for the sync standard library.
