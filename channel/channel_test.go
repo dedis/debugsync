@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func TestCryChan_Passing(t *testing.T) {
+func TestCryChanPassing(t *testing.T) {
 	c := NewCryChan[bool](10, time.Second*1)
 	require.NotNil(t, c)
 
@@ -35,7 +35,7 @@ func TestCryChan_Passing(t *testing.T) {
 	require.Equal(t, 0, c.Len())
 }
 
-func TestCryChan_TimedOut(t *testing.T) {
+func TestCryChanTimedOut(t *testing.T) {
 	var logBuffer bytes.Buffer
 
 	oldLog := Logger
