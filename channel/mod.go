@@ -4,10 +4,8 @@
 // It is disabled by default and the level can be increased using
 // an environment variable:
 //
-//	 CRY_LOG=trace
-//	 CRY_LOG=info
-//
-
+//	CRY_LOG=trace
+//	CRY_LOG=info
 package channel
 
 import (

@@ -7,18 +7,18 @@ import (
 	"time"
 )
 
-const chanTimeout = time.Second * 1
-
 type CryChan[T any] struct {
 	c chan T
+	t time.Duration
 }
 
 // NewCryChan creates a new cryChan of the given type and size
-func NewCryChan[T any](bufSize int) CryChan[T] {
+func NewCryChan[T any](bufSize int, timeout time.Duration) CryChan[T] {
 	Logger = Logger.With().Int("size", bufSize).Logger()
 
 	return CryChan[T]{
 		c: make(chan T, bufSize),
+		t: timeout,
 	}
 }
 
@@ -27,7 +27,7 @@ func (c *CryChan[T]) Push(e T) {
 	start := time.Now()
 	select {
 	case c.c <- e:
-	case <-time.After(chanTimeout):
+	case <-time.After(c.t):
 		// prints the first 16 bytes of the trace, which should contain at least
 		// the goroutine id.
 		trace := make([]byte, 16)
