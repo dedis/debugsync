@@ -1,19 +1,18 @@
-// Package debugsync defines the logger.
+// Package sync defines the logger.
 //
-// debugsync is using a global logger with some default parameters.
+// sync is using a global logger with some default parameters.
 // It is disabled by default and the level can be increased using
 // an environment variable:
 //
-//	 DBGSYNCLOG=trace
-//	 DBGSYNCLOG=info
+//	SYNCLOG=trace
+//	SYNCLOG=info
 //
-// debugsync main feature is disabled by default and thus works seemingly
+// sync main feature is disabled by default and thus works seemingly
 // like the original sync package from the standard. To enable the debugging
 // feature, use the following environment variable, e.g:
-//   DBGSYNCON=true
 //
-
-package debugsync
+//	SYNCON=true
+package sync
 
 import (
 	"os"
@@ -25,10 +24,10 @@ import (
 
 // EnvLogLevel is the name of the environment variable to change the logging
 // level.
-const EnvLogLevel = "DBGSYNCLOG"
+const EnvLogLevel = "SYNCLOG"
 
 // EnvDebugSwitch is the name of the environment variable to allow debugging.
-const EnvDebugSwitch = "DBGSYNCON"
+const EnvDebugSwitch = "SYNCON"
 
 const defaultLevel = zerolog.NoLevel
 

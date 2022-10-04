@@ -1,4 +1,4 @@
-package debugsync
+package sync
 
 import (
 	"runtime/debug"

@@ -6,13 +6,9 @@
 
 // GOMAXPROCS=10 go test
 
-//lint:file-ignore SA2001 Empty critical section is acceptable in the context of a test
-
-package debugsync
+package sync
 
 import (
-	"fmt"
-
 	"os"
 	"os/exec"
 	"runtime"
@@ -30,7 +26,7 @@ func HammerMutex(m *Mutex, loops int, cdone chan bool) {
 			continue
 		}
 		m.Lock()
-		m.Unlock()
+		m.Unlock() //nolint:staticcheck // SA2001: empty critical section IGNORED !
 	}
 	cdone <- true
 }
@@ -89,7 +85,7 @@ var misuseTests = []struct {
 		func() {
 			var mu Mutex
 			mu.Lock()
-			mu.Unlock()
+			mu.Unlock() //nolint:staticcheck // SA2001: empty critical section IGNORED !
 			mu.Unlock()
 		},
 	},
@@ -113,7 +109,7 @@ var misuseTests = []struct {
 		func() {
 			var mu RWMutex
 			mu.Lock()
-			mu.Unlock()
+			mu.Unlock() //nolint:staticcheck // SA2001: empty critical section IGNORED !
 			mu.Unlock()
 		},
 	},
@@ -137,7 +133,7 @@ var misuseTests = []struct {
 		func() {
 			var mu RWMutex
 			mu.RLock()
-			mu.RUnlock()
+			mu.RUnlock() //nolint:staticcheck // SA2001: empty critical section IGNORED !
 			mu.RUnlock()
 		},
 	},
@@ -151,11 +147,9 @@ func init() {
 					defer func() { recover() }()
 					test.f()
 				}()
-				fmt.Printf("test completed\n")
 				os.Exit(0)
 			}
 		}
-		fmt.Printf("unknown test\n")
 		os.Exit(0)
 	}
 }
@@ -200,7 +194,7 @@ func mutexFairness(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			time.Sleep(100 * time.Microsecond)
 			mu.Lock()
-			mu.Unlock()
+			mu.Unlock() //nolint:staticcheck // SA2001: empty critical section IGNORED !
 		}
 		done <- true
 	}()
