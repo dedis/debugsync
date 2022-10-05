@@ -7,23 +7,23 @@ import (
 	"time"
 )
 
-type CryChan[T any] struct {
+type TimedChannel[T any] struct {
 	c chan T
 	t time.Duration
 }
 
-// NewCryChan creates a new cryChan of the given type and size
-func NewCryChan[T any](bufSize int, timeout time.Duration) CryChan[T] {
+// NewTimedChannel creates a new cryChan of the given type and size
+func NewTimedChannel[T any](bufSize int, timeout time.Duration) TimedChannel[T] {
 	Logger = Logger.With().Int("size", bufSize).Logger()
 
-	return CryChan[T]{
+	return TimedChannel[T]{
 		c: make(chan T, bufSize),
 		t: timeout,
 	}
 }
 
 // Push adds an element in the channel, or logs if it's blocked for too long
-func (c *CryChan[T]) Push(e T) {
+func (c *TimedChannel[T]) Push(e T) {
 	start := time.Now()
 	select {
 	case c.c <- e:
@@ -42,7 +42,7 @@ func (c *CryChan[T]) Push(e T) {
 }
 
 // Pop removes an element from the channel
-func (c *CryChan[T]) Pop(ctx context.Context) (t T, err error) {
+func (c *TimedChannel[T]) Pop(ctx context.Context) (t T, err error) {
 	select {
 	case el := <-c.c:
 		return el, nil
@@ -52,6 +52,6 @@ func (c *CryChan[T]) Pop(ctx context.Context) (t T, err error) {
 }
 
 // Len gives the current number of elements in the channel
-func (c *CryChan[T]) Len() int {
+func (c *TimedChannel[T]) Len() int {
 	return len(c.c)
 }

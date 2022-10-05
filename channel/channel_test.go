@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-func TestCryChanPassing(t *testing.T) {
-	c := NewCryChan[bool](10, time.Second*1)
+func TestTimedChannelNormalUse(t *testing.T) {
+	c := NewTimedChannel[bool](10, time.Second*1)
 	require.NotNil(t, c)
 
 	c.Push(true)
@@ -35,7 +35,7 @@ func TestCryChanPassing(t *testing.T) {
 	require.Equal(t, 0, c.Len())
 }
 
-func TestCryChanTimedOut(t *testing.T) {
+func TestTimedChannelTimeOut(t *testing.T) {
 	var logBuffer bytes.Buffer
 
 	oldLog := Logger
@@ -45,7 +45,7 @@ func TestCryChanTimedOut(t *testing.T) {
 
 	Logger = zerolog.New(&logBuffer)
 
-	c := NewCryChan[bool](3, time.Millisecond*100)
+	c := NewTimedChannel[bool](3, time.Millisecond*100)
 	require.NotNil(t, c)
 
 	c.Push(true)
@@ -65,6 +65,6 @@ func TestCryChanTimedOut(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, b)
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 10) // the log needs some time be generated
 	require.True(t, strings.Contains(logBuffer.String(), "channel unblocked"))
 }
