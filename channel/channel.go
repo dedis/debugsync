@@ -8,26 +8,28 @@ import (
 )
 
 type TimedChannel[T any] struct {
-	c      chan T
 	t      time.Duration
 	ctx    context.Context
+	c      chan T
 	pushCb func(string)
 	popCb  func(string)
 }
 
+type callBack func(string)
+
 // NewWithTimeout creates a new channel of the given size, type and timeout
 // Note: if the callbacks are not nil, they are called when the timeout expires
 func NewWithTimeout[T any](
-	bufSize int,
 	timeout time.Duration,
-	pushCallback func(string),
-	popCallback func(string)) TimedChannel[T] {
+	bufSize int,
+	pushCallback callBack,
+	popCallback callBack) TimedChannel[T] {
 	Logger = Logger.With().Int("size", bufSize).Logger()
 
 	return TimedChannel[T]{
-		c:      make(chan T, bufSize),
 		t:      timeout,
 		ctx:    context.Background(),
+		c:      make(chan T, bufSize),
 		pushCb: pushCallback,
 		popCb:  popCallback,
 	}
@@ -36,10 +38,10 @@ func NewWithTimeout[T any](
 // NewWithContext creates a new channel of the given size, type and context
 // Note: if the callbacks are not nil, they are called when the context expires
 func NewWithContext[T any](
-	bufSize int,
 	ctx context.Context,
-	pushCallback func(string),
-	popCallback func(string)) TimedChannel[T] {
+	bufSize int,
+	pushCallback callBack,
+	popCallback callBack) TimedChannel[T] {
 	Logger = Logger.With().Int("size", bufSize).Logger()
 
 	return TimedChannel[T]{
