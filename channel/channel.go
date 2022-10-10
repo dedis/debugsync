@@ -2,102 +2,94 @@ package channel
 
 import (
 	"context"
-	"errors"
-	"runtime/debug"
 	"time"
 )
 
-type TimedChannel[T any] struct {
-	t      time.Duration
-	ctx    context.Context
-	c      chan T
-	pushCb func(string)
-	popCb  func(string)
+const defaultChannelTimeout = time.Second * 1
+
+type Timed[T any] struct {
+	c chan T
 }
 
-type callBack func(string)
-
-// NewWithTimeout creates a new channel of the given size, type and timeout
+// NewWithExpiration creates a new channel of the given size, type and timeout
 // Note: if the callbacks are not nil, they are called when the timeout expires
-func NewWithTimeout[T any](
-	timeout time.Duration,
-	bufSize int,
-	pushCallback callBack,
-	popCallback callBack) TimedChannel[T] {
+func NewWithExpiration[T any](bufSize int) Timed[T] {
 	Logger = Logger.With().Int("size", bufSize).Logger()
 
-	return TimedChannel[T]{
-		t:      timeout,
-		ctx:    context.Background(),
-		c:      make(chan T, bufSize),
-		pushCb: pushCallback,
-		popCb:  popCallback,
+	return Timed[T]{
+		c: make(chan T, bufSize),
 	}
 }
 
-// NewWithContext creates a new channel of the given size, type and context
-// Note: if the callbacks are not nil, they are called when the context expires
-func NewWithContext[T any](
-	ctx context.Context,
-	bufSize int,
-	pushCallback callBack,
-	popCallback callBack) TimedChannel[T] {
-	Logger = Logger.With().Int("size", bufSize).Logger()
-
-	return TimedChannel[T]{
-		c:      make(chan T, bufSize),
-		t:      0,
-		ctx:    ctx,
-		pushCb: pushCallback,
-		popCb:  popCallback,
-	}
-}
-
-// Push adds an element in the channel,
-// or calls the pushCb if it fails after the given timeout
-func (c *TimedChannel[T]) Push(e T) {
+// PushWithContext adds an element in the channel,
+// or logs a warning if it fails after the given context
+func (c *Timed[T]) PushWithContext(ctx context.Context, e T) {
 	select {
 	case c.c <- e:
 		return
-	case <-c.ctx.Done():
-	case <-time.After(c.t):
+	case <-ctx.Done():
+		Logger.Warn().Stack().Msg("channel blocked on Push with call stack")
+		c.c <- e
+	}
+}
+
+// PushWithTimeout adds an element in the channel,
+// or logs a warning if it fails after the given timeout
+func (c *Timed[T]) PushWithTimeout(t time.Duration, e T) {
+	ctx, cancel := context.WithTimeout(context.Background(), t)
+	defer cancel()
+
+	c.PushWithContext(ctx, e)
+}
+
+// Push adds an element in the channel,
+// or logs a warning if it fails after default timeout
+func (c *Timed[T]) Push(e T) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultChannelTimeout)
+	defer cancel()
+
+	c.PushWithContext(ctx, e)
+}
+
+// PopWithContext removes an element from the channel
+// or logs a warning if it fails after the given context timeout
+func (c *Timed[T]) PopWithContext(ctx context.Context) T {
+	var e T
+
+	select {
+	case e = <-c.c:
+	case <-ctx.Done():
+		Logger.Warn().Stack().Msg("channel blocked on Pop with call stack")
+		e = <-c.c
 	}
 
-	// process timeout
-	s := string(debug.Stack())
-	if c.pushCb != nil {
-		c.pushCb(s)
-	} else {
-		Logger.Warn().Str("stack", s)
-	}
+	return e
+}
+
+// PopWithTimeout removes an element from the channel
+// or logs a warning if it fails after the given timeout
+func (c *Timed[T]) PopWithTimeout(t time.Duration) T {
+	ctx, cancel := context.WithTimeout(context.Background(), t)
+	defer cancel()
+
+	return c.PopWithContext(ctx)
 }
 
 // Pop removes an element from the channel
-func (c *TimedChannel[T]) Pop() (t T, err error) {
-	select {
-	case el := <-c.c:
-		return el, nil
-	case <-c.ctx.Done():
-	case <-time.After(c.t):
-	}
+// or logs a warning if it fails after the default timeout
+func (c *Timed[T]) Pop() T {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultChannelTimeout)
+	defer cancel()
 
-	// process timeout
-	s := string(debug.Stack())
-	if c.popCb != nil {
-		c.popCb(s)
-	} else {
-		Logger.Warn().Str("stack", s)
-	}
-
-	return t, errors.New(s)
+	return c.PopWithContext(ctx)
 }
 
 // Len gives the current number of elements in the channel
-func (c *TimedChannel[T]) Len() int {
+func (c *Timed[T]) Len() int {
 	return len(c.c)
 }
 
 // Channel returns the raw channel used
-func (c *TimedChannel[T]) Channel() *chan T {
+func (c *Timed[T]) Channel() *chan T {
 	return &c.c
 }
