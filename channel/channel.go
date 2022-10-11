@@ -2,18 +2,22 @@ package channel
 
 import (
 	"context"
+	"golang.org/x/xerrors"
 	"time"
 )
 
 const defaultChannelTimeout = time.Second * 1
 
+var FailedPush = xerrors.New("channel blocked on Push with call stack")
+var FailedPop = xerrors.New("channel blocked on Push with call stack")
+
 type Timed[T any] struct {
 	c chan T
 }
 
-// NewWithExpiration creates a new channel of the given size, type and timeout
+// WithExpiration creates a new channel of the given size, type and timeout
 // Note: if the callbacks are not nil, they are called when the timeout expires
-func NewWithExpiration[T any](bufSize int) Timed[T] {
+func WithExpiration[T any](bufSize int) Timed[T] {
 	Logger = Logger.With().Int("size", bufSize).Logger()
 
 	return Timed[T]{
@@ -28,7 +32,7 @@ func (c *Timed[T]) PushWithContext(ctx context.Context, e T) {
 	case c.c <- e:
 		return
 	case <-ctx.Done():
-		Logger.Warn().Stack().Msg("channel blocked on Push with call stack")
+		Logger.Warn().Stack().Msg(FailedPush.Error())
 		c.c <- e
 	}
 }
@@ -59,7 +63,7 @@ func (c *Timed[T]) PopWithContext(ctx context.Context) T {
 	select {
 	case e = <-c.c:
 	case <-ctx.Done():
-		Logger.Warn().Stack().Msg("channel blocked on Pop with call stack")
+		Logger.Warn().Stack().Msg(FailedPop.Error())
 		e = <-c.c
 	}
 

@@ -25,8 +25,8 @@ func restoreLogger() {
 	Logger = originalLogger
 }
 
-func TestNewWithExpiration(t *testing.T) {
-	c := NewWithExpiration[bool](1)
+func TestWithExpiration(t *testing.T) {
+	c := WithExpiration[bool](1)
 	require.NotNil(t, c)
 }
 
@@ -34,47 +34,47 @@ func TestPushWithContextSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
-	c := NewWithExpiration[int](1)
+	c := WithExpiration[int](1)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 	defer cancel()
 
 	c.PushWithContext(ctx, 0)
-	require.False(t, strings.Contains(l.String(), "channel blocked"))
+	require.False(t, strings.Contains(l.String(), FailedPush.Error()))
 }
 
 func TestPushWithTimeoutSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
-	c := NewWithExpiration[int](1)
+	c := WithExpiration[int](1)
 
 	c.PushWithTimeout(time.Millisecond, 0)
-	require.False(t, strings.Contains(l.String(), "channel blocked"))
+	require.False(t, strings.Contains(l.String(), FailedPush.Error()))
 }
 
 func TestPushSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
-	c := NewWithExpiration[int](1)
+	c := WithExpiration[int](1)
 
 	c.Push(0)
-	require.False(t, strings.Contains(l.String(), "channel blocked"))
+	require.False(t, strings.Contains(l.String(), FailedPush.Error()))
 }
 
 func TestPopWithContextSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
-	c := NewWithExpiration[int](1)
+	c := WithExpiration[int](1)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 	defer cancel()
 
 	c.Push(0)
 	v := c.PopWithContext(ctx)
-	require.False(t, strings.Contains(l.String(), "channel blocked"))
+	require.False(t, strings.Contains(l.String(), FailedPop.Error()))
 	require.Equal(t, 0, v)
 }
 
@@ -82,11 +82,11 @@ func TestPopWithTimeoutSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
-	c := NewWithExpiration[int](1)
+	c := WithExpiration[int](1)
 
 	c.Push(1)
 	v := c.PopWithTimeout(time.Millisecond)
-	require.False(t, strings.Contains(l.String(), "channel blocked"))
+	require.False(t, strings.Contains(l.String(), FailedPop.Error()))
 	require.Equal(t, 1, v)
 }
 
@@ -94,11 +94,11 @@ func TestPopSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
-	c := NewWithExpiration[int](1)
+	c := WithExpiration[int](1)
 
 	c.Push(1)
 	v := c.Pop()
-	require.False(t, strings.Contains(l.String(), "channel blocked"))
+	require.False(t, strings.Contains(l.String(), FailedPop.Error()))
 	require.Equal(t, 1, v)
 }
 
@@ -106,35 +106,34 @@ func TestPushFail(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
-	c := NewWithExpiration[int](1)
+	c := WithExpiration[int](1)
 
-	c.Push(0)
+	c.PushWithTimeout(time.Millisecond, 0)
 
 	go func() {
 		c.PushWithTimeout(time.Millisecond, 0)
 	}()
 
-	time.Sleep(time.Millisecond * 5)
-	require.True(t, strings.Contains(l.String(), "channel blocked"))
+	time.Sleep(time.Millisecond * 10)
+	require.True(t, strings.Contains(l.String(), FailedPush.Error()))
 }
 
 func TestPopFail(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
-	c := NewWithExpiration[int](1)
+	c := WithExpiration[int](1)
 
 	go func() {
-		v := c.PopWithTimeout(time.Millisecond)
-		require.NotEqual(t, 0, v)
+		c.PopWithTimeout(time.Millisecond)
 	}()
 
-	time.Sleep(time.Millisecond * 5)
-	require.True(t, strings.Contains(l.String(), "channel blocked"))
+	time.Sleep(time.Millisecond * 10)
+	require.True(t, strings.Contains(l.String(), FailedPop.Error()))
 }
 
 func TestChannel(t *testing.T) {
-	c := NewWithExpiration[int](1)
+	c := WithExpiration[int](1)
 	channel := c.Channel()
 
 	const data = 12345
@@ -145,7 +144,7 @@ func TestChannel(t *testing.T) {
 }
 
 func TestLen(t *testing.T) {
-	c := NewWithExpiration[bool](3)
+	c := WithExpiration[bool](3)
 	require.Equal(t, 0, c.Len())
 
 	c.Push(true)

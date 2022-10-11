@@ -19,7 +19,7 @@ import (
 // level.
 const EnvLogLevel = "CRY_LOG"
 
-const defaultLogLevel = zerolog.NoLevel
+const defaultLogLevel = zerolog.WarnLevel
 
 func init() {
 	lvl := os.Getenv(EnvLogLevel)
