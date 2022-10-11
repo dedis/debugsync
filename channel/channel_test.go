@@ -128,7 +128,7 @@ func TestPopFail(t *testing.T) {
 		c.PopWithTimeout(time.Millisecond)
 	}()
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 100)
 	require.True(t, strings.Contains(l.String(), FailedPop.Error()))
 }
 
