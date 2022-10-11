@@ -3,13 +3,14 @@ package channel
 import (
 	"context"
 	"golang.org/x/xerrors"
+	"runtime/debug"
 	"time"
 )
 
 const defaultChannelTimeout = time.Second * 1
 
-var FailedPush = xerrors.New("channel blocked on Push")
-var FailedPop = xerrors.New("channel blocked on Pop")
+var FailedPush = xerrors.New("blocked on Push")
+var FailedPop = xerrors.New("blocked on Pop")
 
 type Timed[T any] struct {
 	c chan T
@@ -31,7 +32,7 @@ func (c *Timed[T]) PushWithContext(ctx context.Context, e T) {
 	case c.c <- e:
 		return
 	case <-ctx.Done():
-		Logger.Warn().Stack().Msg(FailedPush.Error())
+		Logger.Warn().AnErr("failed channel", FailedPush).Msg(string(debug.Stack()))
 		c.c <- e
 	}
 }
@@ -62,7 +63,7 @@ func (c *Timed[T]) PopWithContext(ctx context.Context) T {
 	select {
 	case e = <-c.c:
 	case <-ctx.Done():
-		Logger.Warn().Stack().Msg(FailedPop.Error())
+		Logger.Warn().AnErr("failed channel", FailedPop).Msg(string(debug.Stack()))
 		e = <-c.c
 	}
 
