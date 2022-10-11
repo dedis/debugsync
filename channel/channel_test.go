@@ -114,7 +114,8 @@ func TestPushFail(t *testing.T) {
 		c.PushWithTimeout(time.Millisecond, 0)
 	}()
 
-	time.Sleep(time.Millisecond * 10)
+	// need a looong time on Windows to see the logs in the buffer
+	time.Sleep(time.Millisecond * 100)
 	require.True(t, strings.Contains(l.String(), FailedPush.Error()))
 }
 
@@ -128,6 +129,7 @@ func TestPopFail(t *testing.T) {
 		c.PopWithTimeout(time.Millisecond)
 	}()
 
+	// need a looong time on Windows to see the logs in the buffer
 	time.Sleep(time.Millisecond * 100)
 	require.True(t, strings.Contains(l.String(), FailedPop.Error()))
 }
@@ -139,7 +141,7 @@ func TestChannel(t *testing.T) {
 	const data = 12345
 	c.Push(data)
 
-	value := <-*channel
+	value := <-channel
 	require.Equal(t, data, value)
 }
 

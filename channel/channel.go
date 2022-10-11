@@ -94,6 +94,6 @@ func (c *Timed[T]) Len() int {
 }
 
 // Channel returns the raw channel used
-func (c *Timed[T]) Channel() *chan T {
-	return &c.c
+func (c *Timed[T]) Channel() chan T {
+	return c.c
 }
