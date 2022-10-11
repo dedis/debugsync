@@ -8,15 +8,14 @@ import (
 
 const defaultChannelTimeout = time.Second * 1
 
-var FailedPush = xerrors.New("channel blocked on Push with call stack")
-var FailedPop = xerrors.New("channel blocked on Push with call stack")
+var FailedPush = xerrors.New("channel blocked on Push")
+var FailedPop = xerrors.New("channel blocked on Pop")
 
 type Timed[T any] struct {
 	c chan T
 }
 
-// WithExpiration creates a new channel of the given size, type and timeout
-// Note: if the callbacks are not nil, they are called when the timeout expires
+// WithExpiration creates a new channel of the given size and type
 func WithExpiration[T any](bufSize int) Timed[T] {
 	Logger = Logger.With().Int("size", bufSize).Logger()
 
@@ -56,7 +55,7 @@ func (c *Timed[T]) Push(e T) {
 }
 
 // PopWithContext removes an element from the channel
-// or logs a warning if it fails after the given context timeout
+// or logs a warning if it fails after the given context
 func (c *Timed[T]) PopWithContext(ctx context.Context) T {
 	var e T
 
