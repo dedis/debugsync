@@ -11,3 +11,8 @@ written in GO.
 Package that helps debugging mutexes and workgroups in a distributed system. Any
 system deadlock will fire off after a defined timeout.
 This is a drop-in replacement for the sync standard library.
+
+## channel
+Package that helps debugging locked channels. The created channel will generate
+a log if we need to wait more than the timeout before writing or reading a value
+to/from the channel.
