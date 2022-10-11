@@ -40,7 +40,7 @@ func TestPushWithContextSuccess(t *testing.T) {
 	defer cancel()
 
 	c.PushWithContext(ctx, 0)
-	require.False(t, strings.Contains(l.String(), FailedPush.Error()))
+	require.False(t, strings.Contains(l.String(), BlockedPush))
 }
 
 func TestPushWithTimeoutSuccess(t *testing.T) {
@@ -50,7 +50,7 @@ func TestPushWithTimeoutSuccess(t *testing.T) {
 	c := WithExpiration[int](1)
 
 	c.PushWithTimeout(time.Millisecond, 0)
-	require.False(t, strings.Contains(l.String(), FailedPush.Error()))
+	require.False(t, strings.Contains(l.String(), BlockedPush))
 }
 
 func TestPushSuccess(t *testing.T) {
@@ -60,7 +60,7 @@ func TestPushSuccess(t *testing.T) {
 	c := WithExpiration[int](1)
 
 	c.Push(0)
-	require.False(t, strings.Contains(l.String(), FailedPush.Error()))
+	require.False(t, strings.Contains(l.String(), BlockedPush))
 }
 
 func TestPopWithContextSuccess(t *testing.T) {
@@ -74,7 +74,7 @@ func TestPopWithContextSuccess(t *testing.T) {
 
 	c.Push(0)
 	v := c.PopWithContext(ctx)
-	require.False(t, strings.Contains(l.String(), FailedPop.Error()))
+	require.False(t, strings.Contains(l.String(), BlockedPush))
 	require.Equal(t, 0, v)
 }
 
@@ -86,7 +86,7 @@ func TestPopWithTimeoutSuccess(t *testing.T) {
 
 	c.Push(1)
 	v := c.PopWithTimeout(time.Millisecond)
-	require.False(t, strings.Contains(l.String(), FailedPop.Error()))
+	require.False(t, strings.Contains(l.String(), BlockedPush))
 	require.Equal(t, 1, v)
 }
 
@@ -98,7 +98,7 @@ func TestPopSuccess(t *testing.T) {
 
 	c.Push(1)
 	v := c.Pop()
-	require.False(t, strings.Contains(l.String(), FailedPop.Error()))
+	require.False(t, strings.Contains(l.String(), BlockedPush))
 	require.Equal(t, 1, v)
 }
 
@@ -116,7 +116,7 @@ func TestPushFail(t *testing.T) {
 
 	// need a looong time on Windows to see the logs in the buffer
 	time.Sleep(time.Millisecond * 100)
-	require.True(t, strings.Contains(l.String(), FailedPush.Error()))
+	require.True(t, strings.Contains(l.String(), BlockedPush))
 }
 
 func TestPopFail(t *testing.T) {
@@ -131,7 +131,7 @@ func TestPopFail(t *testing.T) {
 
 	// need a looong time on Windows to see the logs in the buffer
 	time.Sleep(time.Millisecond * 100)
-	require.True(t, strings.Contains(l.String(), FailedPop.Error()))
+	require.True(t, strings.Contains(l.String(), BlockedPop))
 }
 
 func TestChannel(t *testing.T) {

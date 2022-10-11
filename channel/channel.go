@@ -2,15 +2,16 @@ package channel
 
 import (
 	"context"
-	"golang.org/x/xerrors"
 	"runtime/debug"
 	"time"
 )
 
 const defaultChannelTimeout = time.Second * 1
 
-var FailedPush = xerrors.New("blocked on Push")
-var FailedPop = xerrors.New("blocked on Pop")
+var BlockedPush = string("Push blocked on channel: ")
+var UnblockedPush = string("Push unblocked on channel: ")
+var BlockedPop = string("Pop blocked on channel: ")
+var UnblockedPop = string("Pop unblocked on channel: ")
 
 type Timed[T any] struct {
 	c chan T
@@ -32,8 +33,9 @@ func (c *Timed[T]) PushWithContext(ctx context.Context, e T) {
 	case c.c <- e:
 		return
 	case <-ctx.Done():
-		Logger.Warn().AnErr("failed channel", FailedPush).Msg(string(debug.Stack()))
+		Logger.Warn().Msgf("%s %X\n%s", BlockedPush, c.c, string(debug.Stack()))
 		c.c <- e
+		Logger.Info().Msgf("%s %X", UnblockedPush, c.c)
 	}
 }
 
@@ -63,8 +65,9 @@ func (c *Timed[T]) PopWithContext(ctx context.Context) T {
 	select {
 	case e = <-c.c:
 	case <-ctx.Done():
-		Logger.Warn().AnErr("failed channel", FailedPop).Msg(string(debug.Stack()))
-		e = <-c.c
+		Logger.Warn().Msgf("%s %X\n%s", BlockedPop, c.c, string(debug.Stack()))
+		c.c <- e
+		Logger.Info().Msgf("%s %X", UnblockedPop, c.c)
 	}
 
 	return e
