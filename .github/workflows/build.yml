@@ -55,13 +55,3 @@ jobs:
       with:
         name: PR_NUMBER
         path: PR_NUMBER.txt
-
- # notifies that all jobs are finished.
-  finish:
-
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: shogo82148/actions-goveralls@v1
-        with:
-          parallel-finished: true
