@@ -8,13 +8,17 @@ on:
 
 jobs:
   test:
+
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
+
     runs-on: ${{matrix.platform}}
+
     env:
       DBGSYNCLOG: trace
       DBGSYNCON: true
+
     steps:
     - name: Set up Go ^1.19
       uses: actions/setup-go@v2
@@ -45,21 +49,12 @@ jobs:
       run: go test -json -covermode=count -coverprofile=profile.cov ./... > report.json
 
     - name: Save PR number to file
-      if: github.event_name == 'pull_request' && matrix.platform == 'ubuntu-latest'
+      if: matrix.platform == 'ubuntu-latest' && github.event_name == 'pull_request'
       run: echo ${{ github.event.number }} > PR_NUMBER.txt
 
     - name: Archive PR number
-      if: github.event_name == 'pull_request' && matrix.platform == 'ubuntu-latest'
+      if: matrix.platform == 'ubuntu-latest' && github.event_name == 'pull_request'
       uses: actions/upload-artifact@v3
       with:
         name: PR_NUMBER
         path: PR_NUMBER.txt
-       
-  # notifies that all test jobs are finished.
-  finish:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: shogo82148/actions-goveralls@v1
-        with:
-          parallel-finished: true
