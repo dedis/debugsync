@@ -49,7 +49,8 @@ jobs:
       if: matrix.platform == 'ubuntu-latest' && github.event_name == 'pull_request'
       uses: actions/upload-artifact@v3
       with:
-        file: report.json
+        name: COVERAGE
+        path: report.json
 
     - name: Save PR number to file
       if: matrix.platform == 'ubuntu-latest' && github.event_name == 'pull_request'

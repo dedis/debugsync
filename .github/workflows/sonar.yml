@@ -19,7 +19,7 @@ jobs:
 
     - name: Download PR number artifact
       if: github.event.workflow_run.event == 'pull_request'
-      uses: dawidd6/action-download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         workflow: Build
         run_id: ${{ github.event.workflow_run.id }}
@@ -56,6 +56,14 @@ jobs:
         git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
         git checkout ${{ github.event.workflow_run.head_branch }}
         git clean -ffdx && git reset --hard HEAD
+
+    - name: Download JSON report artifact
+      if: github.event.workflow_run.event == 'pull_request'
+      uses: actions/download-artifact@v3
+      with:
+        workflow: Build
+        name: COVERAGE
+        path: report.json
 
     - name: Sonarcloud scan
       if: github.event.workflow_run.event == 'pull_request'
