@@ -28,6 +28,7 @@ jobs:
         fetch-depth: 0
 
     - name: Tidy
+      if: matrix.platform == 'ubuntu-latest'
       run: go mod tidy && [ -z "$(git status -s)" ]
 
     - name: Lint
