@@ -7,9 +7,7 @@ on:
 
 jobs:
   sonar:
-
     runs-on: ubuntu-latest
-
     steps:
     - name: Download PR number artifact
       if: github.event.workflow_run.event == 'pull_request'
@@ -18,12 +16,10 @@ jobs:
         workflow: Java CI
         run_id: ${{ github.event.workflow_run.id }}
         name: PR_NUMBER
-        
     - name: Read PR_NUMBER.txt
       if: github.event.workflow_run.event == 'pull_request'
       id: pr_number
       uses: juliangruber/read-file-action@v1
-      
     - name: Request GitHub API for PR data
       if: github.event.workflow_run.event == 'pull_request'
       uses: octokit/request-action@v2.x
@@ -34,14 +30,12 @@ jobs:
         full_name: ${{ github.event.repository.full_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
     - name: Check out code into the Go module directory
       uses: actions/checkout@v3
       with:
         repository: ${{ github.event.workflow_run.head_repository.full_name }}
         ref: ${{ github.event.workflow_run.head_branch }}
         fetch-depth: 0
-
     - name: Checkout base branch
       if: github.event.workflow_run.event == 'pull_request'
       run: |
@@ -50,7 +44,6 @@ jobs:
         git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
         git checkout ${{ github.event.workflow_run.head_branch }}
         git clean -ffdx && git reset --hard HEAD
-
     - name: Sonarcloud scan
       if: matrix.platform == 'ubuntu-latest' && github.event.workflow_run.event == 'pull_request'
       uses: sonarsource/sonarcloud-github-action@master
@@ -63,7 +56,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
     - name: Send coverage
       if: matrix.platform == 'ubuntu-latest'
       uses: shogo82148/actions-goveralls@v1
