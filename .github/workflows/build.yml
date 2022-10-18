@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  build:
+  build-and-test:
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
@@ -58,8 +58,8 @@ jobs:
 
  # notifies that all jobs are finished.
   finish:
-  
-    needs: build
+
+    needs: build-and-test
     runs-on: ubuntu-latest
     steps:
       - uses: shogo82148/actions-goveralls@v1
