@@ -1,4 +1,4 @@
-name: Analysis
+name: Sonar
 
 on: 
   workflow_run:
@@ -6,9 +6,12 @@ on:
     types: [completed]
 
 jobs:
-  test:
+  sonar-analysis:
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
     steps:
+    - name: echo event
+      run: cat $GITHUB_EVENT_PATH
     - name: Download PR number artifact
       if: github.event.workflow_run.event == 'pull_request'
       uses: dawidd6/action-download-artifact@v2
