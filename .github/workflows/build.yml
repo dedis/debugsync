@@ -1,4 +1,4 @@
-name: Test
+name: Build
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     types: [opened, symchronize, reopened]
 
 jobs:
-  test:
+  build:
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
@@ -46,3 +46,12 @@ jobs:
       with:
         name: PR_NUMBER
         path: PR_NUMBER.txt
+
+ # notifies that all jobs are finished.
+  finish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shogo82148/actions-goveralls@v1
+        with:
+          parallel-finished: true
