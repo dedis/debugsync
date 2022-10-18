@@ -45,6 +45,12 @@ jobs:
       if: matrix.platform == 'ubuntu-latest'
       run: go test -json -covermode=count -coverprofile=profile.cov ./... > report.json
 
+    - name: Archive coverage
+      if: matrix.platform == 'ubuntu-latest' && github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v3
+      with:
+        file: report.json
+
     - name: Save PR number to file
       if: matrix.platform == 'ubuntu-latest' && github.event_name == 'pull_request'
       run: echo ${{ github.event.number }} > PR_NUMBER.txt
