@@ -4,19 +4,22 @@ on:
   workflow_run:
     workflows: [Build]
     types: [completed]
-  workflow_dispatch:
 
 jobs:
 
-  sonar-analysis:
+  start:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
     steps:
     - name: echo event
       run: |
-        echo 'Sonar analysis triggered by workflow event'
+        echo 'Sonar analysis triggered by Build workflow'
         cat $GITHUB_EVENT_PATH
 
+  sonar-analysis:
+    needs: start
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+    steps:
     - name: Download PR number artifact
       uses: actions/download-artifact@v3
       with:
