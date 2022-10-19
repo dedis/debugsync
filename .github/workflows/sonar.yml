@@ -2,7 +2,7 @@ name: SonarAnalysis
 
 on:
   workflow_run:
-    workflows: ["Build"]
+    workflows: [Build]
     types: [completed]
   workflow_dispatch:
 
@@ -10,7 +10,7 @@ jobs:
 
   sonar-analysis:
     runs-on: ubuntu-latest
-#    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    #if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - name: echo event
       run: |
