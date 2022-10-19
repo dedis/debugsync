@@ -5,7 +5,6 @@ on:
     workflows: [Build]
     types:
       - completed
-  pull_request:
 
 jobs:
 
@@ -87,7 +86,7 @@ jobs:
 
   # notifies that all jobs are finished.
   finish:
-    needs: test
+    needs: sonar-analysis
     runs-on: ubuntu-latest
     steps:
       - uses: shogo82148/actions-goveralls@v1
