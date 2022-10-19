@@ -1,4 +1,4 @@
-name: Sonar
+name: SonarAnalysis
 
 on:
   workflow_run:
@@ -6,6 +6,7 @@ on:
       - Build
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
 
@@ -19,19 +20,16 @@ jobs:
         cat $GITHUB_EVENT_PATH
 
     - name: Download PR number artifact
-#      if: github.event.workflow_run.event == 'pull_request'
       uses: actions/download-artifact@v3
       with:
         name: PR_NUMBER
         path: PR_NUMBER.txt
 
     - name: Read PR_NUMBER.txt
-#      if: github.event.workflow_run.event == 'pull_request'
       id: pr_number
       uses: juliangruber/read-file-action@v1
 
     - name: Request GitHub API for PR data
-#      if: github.event.workflow_run.event == 'pull_request'
       uses: octokit/request-action@v2.x
       id: get_pr_data
       with:
