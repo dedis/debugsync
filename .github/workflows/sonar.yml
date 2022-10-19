@@ -5,12 +5,13 @@ on:
     workflows: [Build]
     types:
       - completed
+  pull_request:
 
 jobs:
 
   sonar-analysis:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+#    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - name: echo event
       run: |
@@ -18,7 +19,7 @@ jobs:
         cat $GITHUB_EVENT_PATH
 
     - name: Download PR number artifact
-      if: github.event.workflow_run.event == 'pull_request'
+#      if: github.event.workflow_run.event == 'pull_request'
       uses: actions/download-artifact@v3
       with:
         workflow: Build
@@ -26,18 +27,18 @@ jobs:
         name: PR_NUMBER
 
     - name: Read PR_NUMBER.txt
-      if: github.event.workflow_run.event == 'pull_request'
+#      if: github.event.workflow_run.event == 'pull_request'
       id: pr_number
       uses: juliangruber/read-file-action@v1
 
     - name: Request GitHub API for PR data
-      if: github.event.workflow_run.event == 'pull_request'
+#      if: github.event.workflow_run.event == 'pull_request'
       uses: octokit/request-action@v2.x
       id: get_pr_data
       with:
-        route: GET /repos/{full_name}/pulls/{number}
-        number: ${{ steps.pr_number.outputs.content }}
         full_name: ${{ github.event.repository.full_name }}
+        number: ${{ steps.pr_number.outputs.content }}
+        route: GET /repos/{full_name}/pulls/{number}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -49,7 +50,7 @@ jobs:
         fetch-depth: 0
 
     - name: Checkout base branch
-      if: github.event.workflow_run.event == 'pull_request'
+#     if: github.event.workflow_run.event == 'pull_request'
       run: |
         git remote add upstream ${{ github.event.repository.clone_url }}
         git fetch upstream
@@ -58,7 +59,7 @@ jobs:
         git clean -ffdx && git reset --hard HEAD
 
     - name: Download JSON report artifact
-      if: github.event.workflow_run.event == 'pull_request'
+#      if: github.event.workflow_run.event == 'pull_request'
       uses: actions/download-artifact@v3
       with:
         workflow: Build
@@ -66,7 +67,7 @@ jobs:
         path: report.json
 
     - name: Sonarcloud scan
-      if: github.event.workflow_run.event == 'pull_request'
+#      if: github.event.workflow_run.event == 'pull_request'
       uses: sonarsource/sonarcloud-github-action@master
       with:
         args: >
@@ -82,7 +83,7 @@ jobs:
       uses: shogo82148/actions-goveralls@v1
       with:
         path-to-profile: profile.cov
-        parallel: true      
+#        parallel: true      
 
   # notifies that all jobs are finished.
   finish:
@@ -90,5 +91,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: shogo82148/actions-goveralls@v1
-        with:
-          parallel-finished: true
+#        with:
+#          parallel-finished: true
