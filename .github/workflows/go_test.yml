@@ -7,7 +7,6 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-
   test:
     strategy:
       matrix:
@@ -34,15 +33,9 @@ jobs:
       if: matrix.platform == 'macos-latest' || matrix.platform == 'windows-latest'
       run: go test ./...
 
-    - name: Sonarcloud scan
+    - name: SonarCloud scan
       if: matrix.platform == 'ubuntu-latest'
       uses: sonarsource/sonarcloud-github-action@master
-      with:
-        args: >
-          -Dsonar.organization=dedis
-          -Dsonar.projectKey=debugtools
-          -Dsonar.go.tests.reportPaths=report.json
-          -Dsonar.go.coverage.reportPaths=profile.cov
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
