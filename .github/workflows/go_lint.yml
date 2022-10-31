@@ -1,8 +1,8 @@
 name: Go lint
 
 on:
-  pull_request:
-    branches: [ main ]
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 
 jobs:
 
