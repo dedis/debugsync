@@ -20,12 +20,12 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: '🟠 Could not start pull request due to missing *safe PR* label.'
+            body: '🟠 Could not start CI tests due to missing *safe PR* label.'
           })
     - name: Check permission
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'safe PR') }}
       run: |
-        echo "::error:: Cannot start testing because *safe PR* label is not set"
+        echo "::error:: Could not start CI tests due to missing *safe PR* label."
         exit 1
     
   test:
