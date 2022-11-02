@@ -12,6 +12,7 @@ jobs:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{matrix.platform}}
+    if: contains(github.event.pull_request.labels.*.name, 'safe request')
     env:
       DBGSYNCLOG: trace
       DBGSYNCON: true
@@ -36,8 +37,7 @@ jobs:
       run: go test -json -covermode=count -coverprofile=profile.cov ./... > report.json
 
     - name: SonarCloud scan
-      if: matrix.platform == 'ubuntu-latest' &&
-        contains(github.event.pull_request.labels.*.name, 'safe request')
+      if: matrix.platform == 'ubuntu-latest'        
       uses: sonarsource/sonarcloud-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
