@@ -45,7 +45,7 @@ jobs:
       with:
         args: >
           -Dsonar.organization=dedis
-          -Dsonar.projectKey=dedis_ci_setup
+          -Dsonar.projectKey=dedis_debugtools
           -Dsonar.go.tests.reportPaths=report.json
           -Dsonar.go.coverage.reportPaths=profile.cov
           -Dsonar.pullrequest.key=${{ github.event.number }}
