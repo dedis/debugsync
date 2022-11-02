@@ -19,7 +19,7 @@ jobs:
     - name: Check permission
       if: contains(github.event.pull_request.labels.*.name, 'safe request') == false
       run: |
-        echo "::error:: Cannot start testing because safe label is not set'
+        echo "::error:: Cannot start testing because safe label is not set"
         exit 1
 
     - name: Set up Go ^1.19
