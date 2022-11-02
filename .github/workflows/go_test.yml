@@ -7,7 +7,29 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
+  permission:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Add comment if PR permission failed
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'safe request') }}
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '🟠 Could not start pull request due to missing *safe PR* label.'
+          })
+    - name: Check permission
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'safe PR') }}
+      run: |
+        echo "::error:: Cannot start testing because *safe PR* label is not set"
+        exit 1
+    
   test:
+    needs: permission
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
