@@ -17,7 +17,7 @@ jobs:
       DBGSYNCON: true
     steps:
     - name: Check permission
-      if: contains(github.event.pull_request.labels.*.name, 'safe request') == false
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'safe request') == 'false' }}
       run: |
         echo "::error:: Cannot start testing because safe label is not set"
         exit 1
