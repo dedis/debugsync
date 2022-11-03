@@ -20,7 +20,7 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: '🔒 Could not start CI tests due to missing *safe PR* label. &#64;dedis/dedis_maintainers contacted.'
+            body: '🔒 Could not start CI tests due to missing *safe PR* label. @dedis/dedis_maintainers contacted.'
           })
     - name: Check permission
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'safe PR') }}
