@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request_target:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled]
 
 jobs:
   permission:
@@ -20,7 +20,7 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: '🔒 Could not start CI tests due to missing *safe PR* label. @dedis/dedis_maintainers contacted.'
+            body: '🔒 Could not start CI tests due to missing *safe PR* label. Please contact a DEDIS maintainer.'
           })
     - name: Check permission
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'safe PR') }}

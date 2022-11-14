@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request_target:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled]
 
 jobs:
   lint:
@@ -21,9 +21,6 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
       
-    - name: Tidy
-      run: go mod tidy && [ -z "$(git status -s)" ]
-
     - name: Lint
       run: make lint
 
