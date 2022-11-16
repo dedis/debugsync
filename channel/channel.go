@@ -28,38 +28,39 @@ func WithExpiration[T any](bufSize int) Timed[T] {
 
 // PushWithContext adds an element in the channel,
 // or logs a warning if it fails after the given context
-func (c *Timed[T]) PushWithContext(ctx context.Context, e T) {
+func (c *Timed[T]) PushWithContext(ctx context.Context, e T) error {
 	select {
 	case c.c <- e:
-		return
+		return nil
 	case <-ctx.Done():
 		Logger.Warn().Msgf("%s %X\n%s", BlockedPush, c.c, string(debug.Stack()))
 		c.c <- e
 		Logger.Info().Msgf("%s %X", UnblockedPush, c.c)
+		return ctx.Err()
 	}
 }
 
 // PushWithTimeout adds an element in the channel,
 // or logs a warning if it fails after the given timeout
-func (c *Timed[T]) PushWithTimeout(t time.Duration, e T) {
+func (c *Timed[T]) PushWithTimeout(t time.Duration, e T) error {
 	ctx, cancel := context.WithTimeout(context.Background(), t)
 	defer cancel()
 
-	c.PushWithContext(ctx, e)
+	return c.PushWithContext(ctx, e)
 }
 
 // Push adds an element in the channel,
 // or logs a warning if it fails after default timeout
-func (c *Timed[T]) Push(e T) {
+func (c *Timed[T]) Push(e T) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultChannelTimeout)
 	defer cancel()
 
-	c.PushWithContext(ctx, e)
+	return c.PushWithContext(ctx, e)
 }
 
 // PopWithContext removes an element from the channel
 // or logs a warning if it fails after the given context
-func (c *Timed[T]) PopWithContext(ctx context.Context) T {
+func (c *Timed[T]) PopWithContext(ctx context.Context) (T, error) {
 	var e T
 
 	select {
@@ -68,14 +69,14 @@ func (c *Timed[T]) PopWithContext(ctx context.Context) T {
 		Logger.Warn().Msgf("%s %X\n%s", BlockedPop, c.c, string(debug.Stack()))
 		c.c <- e
 		Logger.Info().Msgf("%s %X", UnblockedPop, c.c)
+		return nil, ctx.Err()
 	}
-
-	return e
+	return e, nil
 }
 
 // PopWithTimeout removes an element from the channel
 // or logs a warning if it fails after the given timeout
-func (c *Timed[T]) PopWithTimeout(t time.Duration) T {
+func (c *Timed[T]) PopWithTimeout(t time.Duration) (T, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), t)
 	defer cancel()
 
@@ -84,7 +85,7 @@ func (c *Timed[T]) PopWithTimeout(t time.Duration) T {
 
 // Pop removes an element from the channel
 // or logs a warning if it fails after the default timeout
-func (c *Timed[T]) Pop() T {
+func (c *Timed[T]) Pop() (T, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultChannelTimeout)
 	defer cancel()
 
