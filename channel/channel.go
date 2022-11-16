@@ -69,7 +69,7 @@ func (c *Timed[T]) PopWithContext(ctx context.Context) (T, error) {
 		Logger.Warn().Msgf("%s %X\n%s", BlockedPop, c.c, string(debug.Stack()))
 		c.c <- e
 		Logger.Info().Msgf("%s %X", UnblockedPop, c.c)
-		return nil, ctx.Err()
+		return e, ctx.Err()
 	}
 	return e, nil
 }

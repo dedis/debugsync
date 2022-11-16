@@ -73,7 +73,8 @@ func TestPopWithContextSuccess(t *testing.T) {
 	defer cancel()
 
 	c.Push(0)
-	v := c.PopWithContext(ctx)
+	v, err := c.PopWithContext(ctx)
+	require.NoError(t, err)
 	require.False(t, strings.Contains(l.String(), BlockedPush))
 	require.Equal(t, 0, v)
 }
@@ -85,7 +86,8 @@ func TestPopWithTimeoutSuccess(t *testing.T) {
 	c := WithExpiration[int](1)
 
 	c.Push(1)
-	v := c.PopWithTimeout(time.Millisecond)
+	v, err := c.PopWithTimeout(time.Millisecond)
+	require.NoError(t, err)
 	require.False(t, strings.Contains(l.String(), BlockedPush))
 	require.Equal(t, 1, v)
 }
@@ -97,7 +99,8 @@ func TestPopSuccess(t *testing.T) {
 	c := WithExpiration[int](1)
 
 	c.Push(1)
-	v := c.Pop()
+	v, err := c.Pop()
+	require.NoError(t, err)
 	require.False(t, strings.Contains(l.String(), BlockedPush))
 	require.Equal(t, 1, v)
 }
