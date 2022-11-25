@@ -6,7 +6,7 @@ on:
       [ "Permission" ]
 
 jobs:
-  test:
+  test_and_coverage:
     strategy:
       matrix:
         platform: [macos-latest, windows-latest, ubuntu-latest]
