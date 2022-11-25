@@ -10,5 +10,11 @@ lint: tidy
 vet: tidy
 	go vet ./...
 
-check: lint vet
+check: lint vet test
+	echo "check done"
+
+test: tidy
 	go test ./...
+
+coverage: tidy
+	go test -json -covermode=count -coverprofile=profile.cov ./... > report.json
