@@ -5,11 +5,14 @@ on:
     branches: [ main ]
 
 jobs:
-  setup:
+  test_and_coverage:
     strategy:
       matrix:
         platform: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{matrix.platform}}
+    env:
+      DBGSYNCLOG: trace
+      DBGSYNCON: true
     steps:
     - name: Set up Go ^1.19
       uses: actions/setup-go@v3
@@ -22,16 +25,6 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
 
-  test_and_coverage:
-    needs: setup
-    strategy:
-      matrix:
-        platform: [macos-latest, windows-latest, ubuntu-latest]
-    runs-on: ${{matrix.platform}}
-    env:
-      DBGSYNCLOG: trace
-      DBGSYNCON: true
-    steps:
     - name: Test without coverage
       if: matrix.platform == 'macos-latest' || matrix.platform == 'windows-latest'
       run: make test
