@@ -1,19 +1,15 @@
-name: Go test
+name: Test on push
 
 on:
-  workflow_run: 
-    workflows:
-      [ "Permission" ]
+  push:
+    branches: [ main ]
 
 jobs:
-  test_and_coverage:
+  setup:
     strategy:
       matrix:
         platform: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{matrix.platform}}
-    env:
-      DBGSYNCLOG: trace
-      DBGSYNCON: true
     steps:
     - name: Set up Go ^1.19
       uses: actions/setup-go@v3
@@ -25,7 +21,17 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
-      
+
+  test_and_coverage:
+    needs: setup
+    strategy:
+      matrix:
+        platform: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{matrix.platform}}
+    env:
+      DBGSYNCLOG: trace
+      DBGSYNCON: true
+    steps:
     - name: Test without coverage
       if: matrix.platform == 'macos-latest' || matrix.platform == 'windows-latest'
       run: make test
