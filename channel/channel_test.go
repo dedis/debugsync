@@ -30,7 +30,7 @@ func TestWithExpiration(t *testing.T) {
 	require.NotNil(t, c)
 }
 
-func TestPushWithContextSuccess(t *testing.T) {
+func TestBlockingSendWithContextSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
@@ -39,31 +39,31 @@ func TestPushWithContextSuccess(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 	defer cancel()
 
-	c.PushWithContext(ctx, 0)
-	require.False(t, strings.Contains(l.String(), BlockedPush))
+	c.BlockingSendWithContext(ctx, 0)
+	require.False(t, strings.Contains(l.String(), ErrFailedToSend.Error()))
 }
 
-func TestPushWithTimeoutSuccess(t *testing.T) {
+func TestBlockingSendWithTimeoutSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
 	c := WithExpiration[int](1)
 
-	c.PushWithTimeout(time.Millisecond, 0)
-	require.False(t, strings.Contains(l.String(), BlockedPush))
+	c.BlockingSendWithTimeout(time.Millisecond, 0)
+	require.False(t, strings.Contains(l.String(), ErrFailedToSend.Error()))
 }
 
-func TestPushSuccess(t *testing.T) {
+func TestBlockingSendSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
 	c := WithExpiration[int](1)
 
-	c.Push(0)
-	require.False(t, strings.Contains(l.String(), BlockedPush))
+	c.BlockingSend(0)
+	require.False(t, strings.Contains(l.String(), ErrFailedToSend.Error()))
 }
 
-func TestPopWithContextSuccess(t *testing.T) {
+func TestBlockingReceiveWithContextSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
@@ -72,34 +72,37 @@ func TestPopWithContextSuccess(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 	defer cancel()
 
-	c.Push(0)
-	v := c.PopWithContext(ctx)
-	require.False(t, strings.Contains(l.String(), BlockedPush))
-	require.Equal(t, 0, v)
+	expectedValue := -1
+	c.BlockingSend(expectedValue)
+	v := c.BlockingReceiveWithContext(ctx)
+	require.False(t, strings.Contains(l.String(), ErrFailedToReceive.Error()))
+	require.Equal(t, expectedValue, v)
 }
 
-func TestPopWithTimeoutSuccess(t *testing.T) {
+func TestBlockingReceiveWithTimeoutSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
 	c := WithExpiration[int](1)
 
-	c.Push(1)
-	v := c.PopWithTimeout(time.Millisecond)
-	require.False(t, strings.Contains(l.String(), BlockedPush))
-	require.Equal(t, 1, v)
+	expectedValue := 2
+	c.BlockingSend(expectedValue)
+	v := c.BlockingReceiveWithTimeout(time.Millisecond)
+	require.False(t, strings.Contains(l.String(), ErrFailedToReceive.Error()))
+	require.Equal(t, expectedValue, v)
 }
 
-func TestPopSuccess(t *testing.T) {
+func TestBlockingReceiveSuccess(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
 	c := WithExpiration[int](1)
 
-	c.Push(1)
-	v := c.Pop()
-	require.False(t, strings.Contains(l.String(), BlockedPush))
-	require.Equal(t, 1, v)
+	expectedValue := -7
+	c.BlockingSend(expectedValue)
+	v := c.BlockingReceive()
+	require.False(t, strings.Contains(l.String(), ErrFailedToReceive.Error()))
+	require.Equal(t, expectedValue, v)
 }
 
 func TestPushFail(t *testing.T) {
@@ -108,30 +111,30 @@ func TestPushFail(t *testing.T) {
 
 	c := WithExpiration[int](1)
 
-	c.PushWithTimeout(time.Millisecond, 0)
+	c.BlockingSendWithTimeout(time.Millisecond, 0)
 
 	go func() {
-		c.PushWithTimeout(time.Millisecond, 0)
+		c.BlockingSendWithTimeout(time.Millisecond, 0)
 	}()
 
 	// need a looong time on Windows to see the logs in the buffer
 	time.Sleep(time.Millisecond * 100)
-	require.True(t, strings.Contains(l.String(), BlockedPush))
+	require.True(t, strings.Contains(l.String(), ErrFailedToSend.Error()))
 }
 
-func TestPopFail(t *testing.T) {
+func TestBlockingReceiveFail(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
 	c := WithExpiration[int](1)
 
 	go func() {
-		c.PopWithTimeout(time.Millisecond)
+		c.BlockingReceiveWithTimeout(time.Millisecond)
 	}()
 
 	// need a looong time on Windows to see the logs in the buffer
 	time.Sleep(time.Millisecond * 100)
-	require.True(t, strings.Contains(l.String(), BlockedPop))
+	require.True(t, strings.Contains(l.String(), ErrFailedToReceive.Error()))
 }
 
 func TestChannel(t *testing.T) {
@@ -139,7 +142,7 @@ func TestChannel(t *testing.T) {
 	channel := c.Channel()
 
 	const data = 12345
-	c.Push(data)
+	c.BlockingSend(data)
 
 	value := <-channel
 	require.Equal(t, data, value)
@@ -149,13 +152,13 @@ func TestLen(t *testing.T) {
 	c := WithExpiration[bool](3)
 	require.Equal(t, 0, c.Len())
 
-	c.Push(true)
-	c.Push(false)
+	c.BlockingSend(true)
+	c.BlockingSend(false)
 	require.Equal(t, 2, c.Len())
 
-	c.Pop()
+	c.BlockingReceive()
 	require.Equal(t, 1, c.Len())
 
-	c.Pop()
+	c.BlockingReceive()
 	require.Equal(t, 0, c.Len())
 }
