@@ -104,7 +104,7 @@ func (c *Timed[T]) NotBlockingSendWithContext(ctx context.Context, e T) error {
 	case c.c <- e:
 		return nil
 	case <-ctx.Done():
-		return ctx.Err()
+		return ErrFailedToSend
 	}
 }
 
@@ -135,7 +135,7 @@ func (c *Timed[T]) NotBlockingReceiveWithContext(ctx context.Context) (T, error)
 	case e = <-c.c:
 		return e, nil
 	case <-ctx.Done():
-		return e, ctx.Err()
+		return e, ErrFailedToReceive
 	}
 }
 

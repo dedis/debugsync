@@ -105,7 +105,7 @@ func TestBlockingReceiveSuccess(t *testing.T) {
 	require.Equal(t, expectedValue, v)
 }
 
-func TestPushFail(t *testing.T) {
+func TestBlockingSendFail(t *testing.T) {
 	l := setupLogger()
 	defer restoreLogger()
 
@@ -135,6 +135,112 @@ func TestBlockingReceiveFail(t *testing.T) {
 	// need a looong time on Windows to see the logs in the buffer
 	time.Sleep(time.Millisecond * 100)
 	require.True(t, strings.Contains(l.String(), ErrFailedToReceive.Error()))
+}
+
+func TestNotBlockingSendWithContextSuccess(t *testing.T) {
+	defer restoreLogger()
+
+	c := WithExpiration[int](1)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+	defer cancel()
+
+	err := c.NotBlockingSendWithContext(ctx, 0)
+	require.NoError(t, err)
+}
+
+func TestNotBlockingSendWithTimeoutSuccess(t *testing.T) {
+	defer restoreLogger()
+
+	c := WithExpiration[int](1)
+
+	err := c.NotBlockingSendWithTimeout(time.Millisecond, 0)
+	require.NoError(t, err)
+}
+
+func TestNotBlockingSendSuccess(t *testing.T) {
+	defer restoreLogger()
+
+	c := WithExpiration[int](1)
+
+	err := c.NotBlockingSend(0)
+	require.NoError(t, err)
+}
+
+func TestNotBlockingReceiveWithContextSuccess(t *testing.T) {
+	defer restoreLogger()
+
+	c := WithExpiration[int](1)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+	defer cancel()
+
+	expectedValue := -1
+	err := c.NotBlockingSend(expectedValue)
+	require.NoError(t, err)
+
+	v, err := c.NotBlockingReceiveWithContext(ctx)
+	require.NoError(t, err)
+	require.Equal(t, expectedValue, v)
+}
+
+func TestNotBlockingReceiveWithTimeoutSuccess(t *testing.T) {
+	defer restoreLogger()
+
+	c := WithExpiration[int](1)
+
+	expectedValue := 2
+	err := c.NotBlockingSend(expectedValue)
+	require.NoError(t, err)
+
+	v, err := c.NotBlockingReceiveWithTimeout(time.Millisecond)
+	require.NoError(t, err)
+	require.Equal(t, expectedValue, v)
+}
+
+func TestNotBlockingReceiveSuccess(t *testing.T) {
+	defer restoreLogger()
+
+	c := WithExpiration[int](1)
+
+	expectedValue := -7
+	err := c.NotBlockingSend(expectedValue)
+	require.NoError(t, err)
+
+	v, err := c.NotBlockingReceive()
+	require.NoError(t, err)
+	require.Equal(t, expectedValue, v)
+}
+
+func TestNotBlockingSendFail(t *testing.T) {
+	defer restoreLogger()
+
+	c := WithExpiration[int](1)
+
+	err := c.NotBlockingSendWithTimeout(time.Millisecond, 0)
+	require.NoError(t, err)
+
+	go func() {
+		err := c.NotBlockingSendWithTimeout(time.Millisecond, 0)
+		require.Equal(t, err, ErrFailedToSend)
+	}()
+
+	// need a looong time on Windows to see the logs in the buffer
+	time.Sleep(time.Millisecond * 100)
+}
+
+func TestNotBlockingReceiveFail(t *testing.T) {
+	defer restoreLogger()
+
+	c := WithExpiration[int](1)
+
+	go func() {
+		_, err := c.NotBlockingReceiveWithTimeout(time.Millisecond)
+		require.Error(t, err, ErrFailedToReceive)
+	}()
+
+	// need a looong time on Windows to see the logs in the buffer
+	time.Sleep(time.Millisecond * 100)
 }
 
 func TestChannel(t *testing.T) {
