@@ -1,4 +1,4 @@
-module github.com/dedis/debugtools/channel
+module github.com/dedis/debugtools
 
 go 1.19
 
