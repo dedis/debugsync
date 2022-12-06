@@ -2,93 +2,166 @@ package channel
 
 import (
 	"context"
+	"github.com/rs/zerolog"
 	"runtime/debug"
 	"time"
 )
 
 const defaultChannelTimeout = time.Second * 1
 
-var BlockedPush = string("Push blocked on channel: ")
-var UnblockedPush = string("Push unblocked on channel: ")
-var BlockedPop = string("Pop blocked on channel: ")
-var UnblockedPop = string("Pop unblocked on channel: ")
-
 type Timed[T any] struct {
-	c chan T
+	c   chan T
+	log zerolog.Logger
+}
+
+type Error string
+
+const (
+	ErrFailedToSend    = Error("Could not send data on channel.")
+	ErrFailedToReceive = Error("Could not receive data from channel.")
+)
+
+func (e Error) Error() string {
+	return string(e)
 }
 
 // WithExpiration creates a new channel of the given size and type
 func WithExpiration[T any](bufSize int) Timed[T] {
-	Logger = Logger.With().Int("size", bufSize).Logger()
-
 	return Timed[T]{
-		c: make(chan T, bufSize),
+		c:   make(chan T, bufSize),
+		log: Logger.With().Int("size", bufSize).Logger(),
 	}
 }
 
-// PushWithContext adds an element in the channel,
-// or logs a warning if it fails after the given context
-func (c *Timed[T]) PushWithContext(ctx context.Context, e T) {
+// SendWithContext adds an element in the channel,
+// or logs a warning if it fails in the given context.
+// Note: this is a blocking call as it waits on a channel.
+func (c *Timed[T]) SendWithContext(ctx context.Context, e T) {
 	select {
 	case c.c <- e:
 		return
 	case <-ctx.Done():
-		Logger.Warn().Msgf("%s %X\n%s", BlockedPush, c.c, string(debug.Stack()))
+		c.log.Warn().Msgf("%s %X\n%s", ErrFailedToSend, c.c, string(debug.Stack()))
 		c.c <- e
-		Logger.Info().Msgf("%s %X", UnblockedPush, c.c)
+		c.log.Info().Msgf("unblocked channel %X on send", c.c)
 	}
 }
 
-// PushWithTimeout adds an element in the channel,
-// or logs a warning if it fails after the given timeout
-func (c *Timed[T]) PushWithTimeout(t time.Duration, e T) {
+// SendWithTimeout adds an element in the channel,
+// or logs a warning if it fails after the given timeout.
+// Note: this is a blocking call as it waits on a channel.
+func (c *Timed[T]) SendWithTimeout(t time.Duration, e T) {
 	ctx, cancel := context.WithTimeout(context.Background(), t)
 	defer cancel()
 
-	c.PushWithContext(ctx, e)
+	c.SendWithContext(ctx, e)
 }
 
-// Push adds an element in the channel,
-// or logs a warning if it fails after default timeout
-func (c *Timed[T]) Push(e T) {
+// Send adds an element in the channel,
+// or logs a warning if it fails after default timeout.
+// Note: this is a blocking call as it waits on a channel.
+func (c *Timed[T]) Send(e T) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultChannelTimeout)
 	defer cancel()
 
-	c.PushWithContext(ctx, e)
+	c.SendWithContext(ctx, e)
 }
 
-// PopWithContext removes an element from the channel
-// or logs a warning if it fails after the given context
-func (c *Timed[T]) PopWithContext(ctx context.Context) T {
+// ReceiveWithContext removes an element from the channel
+// or logs a warning if it fails in the given context.
+// Note: this is a blocking call as it waits on a channel.
+func (c *Timed[T]) ReceiveWithContext(ctx context.Context) T {
 	var e T
 
 	select {
 	case e = <-c.c:
 	case <-ctx.Done():
-		Logger.Warn().Msgf("%s %X\n%s", BlockedPop, c.c, string(debug.Stack()))
+		c.log.Warn().Msgf("%s %X\n%s", ErrFailedToReceive, c.c, string(debug.Stack()))
 		c.c <- e
-		Logger.Info().Msgf("%s %X", UnblockedPop, c.c)
+		c.log.Info().Msgf("unblocked channel %X on receiving", c.c)
 	}
 
 	return e
 }
 
-// PopWithTimeout removes an element from the channel
-// or logs a warning if it fails after the given timeout
-func (c *Timed[T]) PopWithTimeout(t time.Duration) T {
+// ReceiveWithTimeout removes an element from the channel
+// or logs a warning if it fails after the given timeout.
+// Note: this is a blocking call as it waits on a channel.
+func (c *Timed[T]) ReceiveWithTimeout(t time.Duration) T {
 	ctx, cancel := context.WithTimeout(context.Background(), t)
 	defer cancel()
 
-	return c.PopWithContext(ctx)
+	return c.ReceiveWithContext(ctx)
 }
 
-// Pop removes an element from the channel
-// or logs a warning if it fails after the default timeout
-func (c *Timed[T]) Pop() T {
+// Receive removes an element from the channel
+// or logs a warning if it fails after the default timeout.
+// Note: this is a blocking call as it waits on a channel.
+func (c *Timed[T]) Receive() T {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultChannelTimeout)
 	defer cancel()
 
-	return c.PopWithContext(ctx)
+	return c.ReceiveWithContext(ctx)
+}
+
+// NonBlockingSendWithContext adds an element in the channel,
+// or returns an error if it fails in the given context.
+func (c *Timed[T]) NonBlockingSendWithContext(ctx context.Context, e T) error {
+	select {
+	case c.c <- e:
+		return nil
+	case <-ctx.Done():
+		return ErrFailedToSend
+	}
+}
+
+// NonBlockingSendWithTimeout adds an element in the channel,
+// or returns an error if it fails after the given timeout.
+func (c *Timed[T]) NonBlockingSendWithTimeout(t time.Duration, e T) error {
+	ctx, cancel := context.WithTimeout(context.Background(), t)
+	defer cancel()
+
+	return c.NonBlockingSendWithContext(ctx, e)
+}
+
+// NonBlockingSend adds an element in the channel,
+// or returns an error if it fails after the default timeout.
+func (c *Timed[T]) NonBlockingSend(e T) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultChannelTimeout)
+	defer cancel()
+
+	return c.NonBlockingSendWithContext(ctx, e)
+}
+
+// NonBlockingReceiveWithContext removes an element from the channel
+// or returns an error if it fails in the given context.
+func (c *Timed[T]) NonBlockingReceiveWithContext(ctx context.Context) (T, error) {
+	var e T
+
+	select {
+	case e = <-c.c:
+		return e, nil
+	case <-ctx.Done():
+		return e, ErrFailedToReceive
+	}
+}
+
+// NonBlockingReceiveWithTimeout removes an element from the channel
+// or returns an error if it fails after the given timeout
+func (c *Timed[T]) NonBlockingReceiveWithTimeout(t time.Duration) (e T, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), t)
+	defer cancel()
+
+	return c.NonBlockingReceiveWithContext(ctx)
+}
+
+// NonBlockingReceive removes an element from the channel
+// or returns an error if it fails after the default timeout
+func (c *Timed[T]) NonBlockingReceive() (e T, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultChannelTimeout)
+	defer cancel()
+
+	return c.NonBlockingReceiveWithContext(ctx)
 }
 
 // Len gives the current number of elements in the channel
