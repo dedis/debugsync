@@ -61,7 +61,7 @@ jobs:
         cp channel/report.json report.json
         cat sync/report.json >> report.json
         cp channel/profile.cov profile.cov
-        cat sync/profile.cov >> profile.cov
+        tail -n +2 sync/profile.cov >> profile.cov
         
     - name: SonarCloud scan
       if: matrix.platform == 'ubuntu-latest'
