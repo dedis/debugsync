@@ -8,7 +8,7 @@ tidy:
 
 lint:
 	# Coding style static check.
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.0
 	make -C channel lint
 	make -C sync lint
 
