@@ -132,12 +132,12 @@ func waitGroupAlign() {
 	x.wg.Wait()
 }
 
-func TestWaitGroupAlignDebugOff(t *testing.T) {
+func TestWaitGroupAlignDebugOff(_ *testing.T) {
 	DebugIsOn = false
 	waitGroupAlign()
 }
 
-func TestWaitGroupAlignDebugOn(t *testing.T) {
+func TestWaitGroupAlignDebugOn(_ *testing.T) {
 	DebugIsOn = true
 	waitGroupAlign()
 }
