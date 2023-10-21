@@ -52,12 +52,12 @@ func parallelReaders() {
 	doTestParallelReaders(4, 2)
 }
 
-func TestParallelReadersDebugOff(t *testing.T) {
+func TestParallelReadersDebugOff(_ *testing.T) {
 	DebugIsOn = false
 	parallelReaders()
 }
 
-func TestParallelReadersDebugOn(t *testing.T) {
+func TestParallelReadersDebugOn(_ *testing.T) {
 	DebugIsOn = true
 	parallelReaders()
 }
