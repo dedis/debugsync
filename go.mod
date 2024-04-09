@@ -1,4 +1,4 @@
-module github.com/dedis/debugtools
+module go.dedis.ch/debugtools
 
 go 1.21
 
